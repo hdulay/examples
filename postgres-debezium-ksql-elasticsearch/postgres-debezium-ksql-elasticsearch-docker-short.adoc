@@ -4,6 +4,8 @@ v1.03, 05 Jul 2018
 :revdate: 2019-03-22 11:14:37 -0600
 :revby: viktor at confluent dot io 
 
+== Use Make File Commands to Start
+
 Enriching event stream data with CDC data from Postgres, stream into Elasticsearch
 
 toc::[]
