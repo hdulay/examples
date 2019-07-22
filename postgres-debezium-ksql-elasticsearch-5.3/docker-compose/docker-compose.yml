@@ -2,7 +2,7 @@
 version: '2'
 services:
   zookeeper:
-    image: confluentinc/cp-zookeeper:5.2.1
+    image: confluentinc/cp-zookeeper:5.3.0
     hostname: zookeeper
     container_name: zookeeper
     ports:
@@ -12,7 +12,7 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
 
   kafka:
-    image: confluentinc/cp-enterprise-kafka:5.2.1
+    image: confluentinc/cp-enterprise-kafka:5.3.0
     hostname: kafka
     container_name: kafka
     depends_on:
@@ -36,7 +36,7 @@ services:
 
   schema-registry:
 
-    image: confluentinc/cp-schema-registry:5.2.1
+    image: confluentinc/cp-schema-registry:5.3.0
     hostname: schema-registry
     container_name: schema-registry
     depends_on:
@@ -49,7 +49,7 @@ services:
       SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: 'zookeeper:2181'
 
   kafka-connect-cp:
-    image: confluentinc/cp-kafka-connect:5.2.1
+    image: confluentinc/cp-kafka-connect:5.3.0
     ports:
       - "18083:18083"
     hostname: kafka-connect-cp
@@ -84,7 +84,7 @@ services:
 
   # KSQL
   ksql-server:
-    image: confluentinc/cp-ksql-server:5.2.1
+    image: confluentinc/cp-ksql-server:5.3.0
     hostname: ksql-server
     container_name: ksql-server
     depends_on:
@@ -103,16 +103,17 @@ services:
       KSQL_KSQL_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
       KSQL_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
       KSQL_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
-      LDA_MODEL: /etc/ksql/lda.model
 
   ksql-cli:
-    image: confluentinc/cp-ksql-cli:5.2.1
+    image: confluentinc/cp-ksql-cli:5.3.0
     container_name: ksql-cli
     depends_on:
       - kafka
       - kafka-connect-cp
       - ksql-server
     entrypoint: /bin/sh
+    volumes: 
+      - $PWD/ksql-setup/:/tmp/ksql/
     tty: true
 
   postgres:
@@ -174,7 +175,7 @@ services:
       STREAMS_SCHEMA_REGISTRY_PORT: 8081
 
   control-center:
-    image: confluentinc/cp-enterprise-control-center:5.2.1
+    image: confluentinc/cp-enterprise-control-center:5.3.0
     hostname: control-center
     container_name: control-center
     depends_on:
@@ -188,7 +189,8 @@ services:
     environment:
       CONTROL_CENTER_BOOTSTRAP_SERVERS: 'kafka:29092'
       CONTROL_CENTER_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-      CONTROL_CENTER_CONNECT_CLUSTER: 'kafka-connect-cp:18083'
+      CONTROL_CENTER_CONNECT_SINKS_CLUSTER: 'kafka-connect-cp:18083'
+      CONTROL_CENTER_CONNECT_SOURCE_CLUSTER: 'connect-debezium:8083'
       CONTROL_CENTER_KSQL_URL: "http://ksql-server:8088"
       CONTROL_CENTER_KSQL_ADVERTISED_URL: "http://ksql-server:8088"
       CONTROL_CENTER_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
@@ -204,7 +206,6 @@ services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:6.3.0
     container_name: elasticsearch
-    hostname: elasticsearch
     #restart: always
     depends_on:
       - kafka-connect-cp
@@ -220,7 +221,6 @@ services:
   kibana:
     image: docker.elastic.co/kibana/kibana:6.3.0
     container_name: kibana
-    hostname: kibana
     depends_on:
       - elasticsearch
     ports:
