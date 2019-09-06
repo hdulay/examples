@@ -8,3 +8,4 @@ python_notify/
 .Python
 .vscode
 node_modules/
+.DS_Store
